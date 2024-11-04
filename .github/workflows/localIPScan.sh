@@ -2,11 +2,13 @@
 
 # Function to display help
 function show_help() {
-    echo "Usage: $0 [output_file] [--fast]"
+    echo "Usage: $0 [output_prefix] [-f | --fast] [-h | --help]"
     echo
-    echo "   output_file : Specify the output file to save the results."
-    echo "                 Default is IP_Add_Local.txt."
-    echo "   --fast      : Enable fast mode to speed up the ping sweep."
+    echo "   output_prefix : Specify the output file prefix to save the results."
+    echo "                   The ping scan results will be saved to <output_prefix>.ip."
+    echo "                   The arp-scan results will be saved to <output_prefix>.arp."
+    echo "   -f, --fast    : Enable fast mode to speed up the ping sweep."
+    echo "   -h, --help    : Display this help message."
     echo
     echo "This script scans all directly connected network segments and verifies live hosts."
 }
@@ -17,17 +19,34 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Check for help flag
-if [[ "$1" == "--help" ]]; then
-    show_help
-    exit 0
-fi
+# Initialize variables
+output_prefix="IP_Add_Local"  # Default output prefix
+fast_mode=0                   # Default is not fast mode
 
-# Define the output file
-output_file="${1:-IP_Add_Local.txt}"
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -f|--fast)
+            fast_mode=1
+            ;;
+        *)
+            output_prefix="$1"  # Set output prefix to the first non-flag argument
+            ;;
+    esac
+    shift  # Move to the next argument
+done
 
-# Clear the output file if it exists
-> "$output_file"
+# Define output file names
+ping_output_file="${output_prefix}.ip"
+arp_output_file="${output_prefix}.arp"
+
+# Clear the output files if they exist
+> "$ping_output_file"
+> "$arp_output_file"
 
 # Get the list of all connected interfaces
 interfaces=$(ip -o -f inet addr show | awk '{print $2}')
@@ -56,18 +75,13 @@ for iface in $interfaces; do
 
     # Initialize progress counter
     count=0
-    # Enable fast mode if specified
-    fast_mode=0
-    if [[ "$2" == "--fast" ]]; then
-        fast_mode=1
-    fi
 
     # Function to perform a ping test in the background
     ping_host() {
         local ip=$1
         if ping -c 1 -W 1 "$ip" > /dev/null; then
             echo "Alive: $ip"  # Print successful IP hits
-            echo "$ip" >> "$output_file"
+            echo "$ip" >> "$ping_output_file"  # Save to ping output file
         fi
     }
 
@@ -94,7 +108,7 @@ done
 
 # Use arp-scan to verify the hosts
 echo "Running arp-scan to verify hosts..."
-arp-scan --localnet >> "$output_file"
+arp-scan --localnet >> "$arp_output_file"  # Save to arp output file
 
 # Output the final results
-echo "Ping sweep complete. Results saved to $output_file."
+echo "Ping sweep complete. Results saved to $ping_output_file and $arp_output_file."
