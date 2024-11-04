@@ -1,0 +1,25 @@
+### Execute Build Script
+
+#!/bin/bash
+
+if [[ "$EUID" -ne 0 ]]; then
+	echo "This script reqires root / sudo to function"; exit 1
+fi
+
+cd /home/bhb/Documents/Black-Hat-Bash/lab || { echo "Directory Not Found"; exit 1;}
+output=$(make test 2>&1)
+
+if [[ "$output" == *"Lab is up"* ]]; then
+	echo "Lab is up"
+else
+	echo "Deploying Lab Environment"
+	make deploy
+fi
+
+docker ps --format "{{.Names}}\t{{.Networks}}" | tail -n +2 | while read -r name network; do
+    # Get IP addresses and join with a space if there are multiple
+    ip=$(docker inspect -f '{{range $net, $conf := .NetworkSettings.Networks}}{{$conf.IPAddress}} {{end}}' "$name" | xargs)
+    printf "%-20s %-20s\n" "$name" "$ip"
+done
+
+cd /home/bhb/Documents/Black-Hat-Bash/lab && exec bash
