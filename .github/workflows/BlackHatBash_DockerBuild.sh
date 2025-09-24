@@ -1,9 +1,8 @@
 ### Execute Build Script
-
 #!/bin/bash
 
 if [[ "$EUID" -ne 0 ]]; then
-	echo "This script reqires root / sudo to function"; exit 1
+	echo "This script requires root / sudo to function"; exit 1
 fi
 
 cd /home/bhb/Documents/Black-Hat-Bash/lab || { echo "Directory Not Found"; exit 1;}
